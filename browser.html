@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jsrsasign playground</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.6.1/jsrsasign-all-min.js" integrity="sha512-2uE4/Fo0nVyJiuKxkvfOjA6SJod6YRPP2rA9DkSoBVv4aOPeQEmlrv0B+nsmfXNns6RPyYvzQbg2UNDUvpqEsw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <script>
+    const doMaths = () => {
+      const t1 = performance.now()
+      
+      let xl = 1;
+      for (let i = 0; i < 10_000_000; i++) {
+        xl++ & 0x1234;
+      }
+
+      const t2 = performance.now()
+      const message = `Doing maths took ${t2 - t1}ms`
+      console.log(message)
+    }
+
+    const testSquareTo = () => {
+      const t1 = new Date().getTime();
+      const r = new BigInteger();
+      for (let i = 0; i < 10; i++) {
+        new BigInteger("123456789".repeat(100)).squareTo(r)
+      }
+      const t2 = new Date().getTime();
+      console.log(r.toString(), `${t2 - t1}ms`)
+    }
+
+    const createJwt = () => {
+      const jwt = KJUR.jws.JWS.sign(null, {alg: "RS256"}, {iat: new Date().getTime() / 1000}, privKey)
+      console.log(jwt)
+    }
+
+    const signRsa = () => {
+      const sig = new KJUR.crypto.Signature({ "alg": "SHA256withRSA" });
+      sig.init(privKey);
+      sig.updateString('abcdef');
+      const hSigVal = sig.sign();
+      console.log(hSigVal);
+    }
+  </script>
+  <h1>Click the button, or use the console to interact with jsrsasign</h1>
+  <button onClick="createJwt()">Create JWT</button>
+  <button onClick="signRsa()">Sign RSA</button>
+  <button onClick="testSquareTo()">Test square to</button>
+  <button onClick="doMaths()">Do maths</button>
+</body>
+</html>
