@@ -1,82 +1,35 @@
-//! Default Compute@Edge template program.
+const jsrsasign = require('jsrsasign')
 
-/// <reference types="@fastly/js-compute" />
+addEventListener("fetch", event => {
+  const jwt = jsrsasign.KJUR.jws.JWS.sign(
+    "RS256",
+    JSON.stringify({ alg: "RS256", typ: "JWT" }),
+    JSON.stringify({
+      iss: "example",
+      scope: "https://www.googleapis.com/auth/logging.write",
+      aud: "https://oauth2.googleapis.com/token",
+      exp: new Date().getTime() / 1000 + 3600,
+      iat: new Date().getTime() / 1000,
+    }),
+    // example key, generated fresh for this purpose
+    `-----BEGIN RSA PRIVATE KEY-----
+    MIICWwIBAAKBgQCkUxj5yJojgShmIjucfoKHOWHsr+L1cWwheBR4aLZpnIYhD/5w
+    d8sU4ZFUtU3y8YyFCsHu0heqS2sdebiRhV1JrSN03HrQOWhuhMIKWxy7a5HzKKkK
+    aJ0zPB0EHyTEs03Kl5VEoqdOEE/0sWGf7BqWSMFzZoVnN0flxoEbfWjnpwIDAQAB
+    AoGAMjMknSI4XIJXiiQJG/zV+WOBU+JDroGw6+SYNFSg7VCg9TbCny8pfj6OvFcK
+    8h3ytK4doszR5/dUSNPnm6UnYx5CyuXytm6oFjdVH3+9u83OcrsY1Ge4NSLTzbu0
+    3HCVF3mX+iixNbv1VRJM/k7s7fAp7c+KIM3jsXeyNcUfC4kCQQDSfmftAcxTbooU
+    P/U46p5BBAdckUCW++7rrRvBxvL3BDIFc68J8HDjfEeySdbYUFo4vyjQmWfI7np1
+    Vg7bFWb7AkEAx9l/v9kDD/+8yG/jsIuz1hiIkQMEO9PQZAOfsSzEoumBD3JVsYdB
+    DIOrd32PDYjIKfEbRPH9g0mPLa0/w2uSRQJAAWTY51bltX+75lpuE0xqc9/E9LX5
+    iYZtlJ322xeoMD6U3jhf5l7zQG5oQyP+Cjyt/EY3zPnXGBuMMA671nOT1QJACJvG
+    0/W+GwdSE3Q2Y5lw8qz13QE7QnR6SoSZcWFTSw0x4P90z4Pa+nYFgc0nx1Z4AM6A
+    9TRTTj9x6m7HC1zr3QJAF0F0X0kkKkqZYg0dEfk1zXjTrc8t7y4vjy4OlFa+zgIX
+    kPurVUg7MOG/bfqh/PnV5ElUrG8DN9DTDuDXwvFoJg==
+    -----END RSA PRIVATE KEY-----`
+  )
 
-// import { CacheOverride } from "fastly:cache-override";
-// import { Logger } from "fastly:logger";
-import { includeBytes } from "fastly:experimental";
-
-// Load a static file as a Uint8Array at compile time.
-// File path is relative to root of project, not to this file
-const welcomePage = includeBytes("./src/welcome-to-compute@edge.html");
-
-// The entry point for your application.
-//
-// Use this fetch event listener to define your main request handling logic. It could be
-// used to route based on the request properties (such as method or path), send
-// the request to a backend, make completely new requests, and/or generate
-// synthetic responses.
-
-addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
-
-async function handleRequest(event) {
-  // Log service version
-  console.log("FASTLY_SERVICE_VERSION:", fastly.env.get('FASTLY_SERVICE_VERSION' || ''));
-  
-  // Get the client request.
-  let req = event.request;
-
-  // Filter requests that have unexpected methods.
-  if (!["HEAD", "GET", "PURGE"].includes(req.method)) {
-    return new Response("This method is not allowed", {
-      status: 405,
-    });
-  }
-
-  let url = new URL(req.url);
-
-  // If request is to the `/` path...
-  if (url.pathname == "/") {
-    // Below are some common patterns for Compute@Edge services using JavaScript.
-    // Head to https://developer.fastly.com/learning/compute/javascript/ to discover more.
-
-    // Create a new request.
-    // let bereq = new Request("http://example.com");
-
-    // Add request headers.
-    // req.headers.set("X-Custom-Header", "Welcome to Compute@Edge!");
-    // req.headers.set(
-    //   "X-Another-Custom-Header",
-    //   "Recommended reading: https://developer.fastly.com/learning/compute"
-    // );
-
-    // Create a cache override.
-    // To use this, uncomment the import statement at the top of this file for CacheOverride.
-    // let cacheOverride = new CacheOverride("override", { ttl: 60 });
-
-    // Forward the request to a backend.
-    // let beresp = await fetch(req, {
-    //   backend: "backend_name",
-    //   cacheOverride,
-    // });
-
-    // Remove response headers.
-    // beresp.headers.delete("X-Another-Custom-Header");
-
-    // Log to a Fastly endpoint.
-    // To use this, uncomment the import statement at the top of this file for Logger.
-    // const logger = new Logger("my_endpoint");
-    // logger.log("Hello from the edge!");
-
-    // Send a default synthetic response.
-    return new Response(welcomePage, {
-      status: 200,
-      headers: new Headers({ "Content-Type": "text/html; charset=utf-8" }),
-    });
-  }
-
-  // Catch all other requests and return a 404.
-  return new Response("The page you requested could not be found", {
-    status: 404,
-  });
-}
+  event.respondWith(new Response(
+    `Here's a token, made just for you: ${jwt}`
+  ));
+});
